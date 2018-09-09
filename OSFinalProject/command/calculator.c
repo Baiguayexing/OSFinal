@@ -3,8 +3,6 @@ int main(int argc, char * argv[])
 {
 	int i, num1 = 0, num2 = 0, flag = 1, res = 0;
         char bufr[128];
-	char bufr1[128];
-        char bufr2[128];
 
 	printf("===================================================\n");
 	printf("=                  Calculator                     =\n");
@@ -15,17 +13,17 @@ int main(int argc, char * argv[])
 
 	while(flag == 1){	
 		printf("Input num1:");
-		i = read(0, bufr1, 128);
-		if (bufr1[0] == 'e')
+		i = read(0, bufr, 128);
+		if (bufr[0] == 'e')
 			break;
-		num1 = getNum(bufr1);
+		num1 = getNum(bufr);
 		printf("Num1= %d\n", num1);
 
 		printf("Input num2:");
-		i = read(0, bufr2, 128);	
-		if (bufr2[0] == 'e')
+		i = read(0, bufr, 128);	
+		if (bufr[0] == 'e')
 			break;
-		num2 = getNum(bufr2);
+		num2 = getNum(bufr);
 		printf("Num2= %d\n", num2);
 
 		printf("Input  + - * / :");
@@ -59,8 +57,6 @@ int main(int argc, char * argv[])
 				printf("Error!\n");
 		}
         memset(bufr,0,100);
-        memset(bufr1,0,100);
-        memset(bufr2,0,100);
 	}
     
 	return 0;

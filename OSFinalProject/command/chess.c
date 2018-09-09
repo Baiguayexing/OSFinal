@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "stdio.h"
 #define chartonumber(x) (x-'0')
 #define width 15
 #define height 15
@@ -19,7 +19,11 @@ int getNum(char * bufr);
 
 int main()
 {
-	game_start();
+	int i = 0, j = 0;
+        for(i = 0; i < 15; i++)
+                for(j = 0; j < 15; j++)
+                        Table[i][j] = 0;
+        game_start();
 	return 0;
 }
 
@@ -68,9 +72,9 @@ int game_start()
 {
 	char bufr[128];
 	int a;
-	printf("    欢迎来到五子棋    \n");
+	printf("    Welcome    \n");
 	flag1:
-	printf("输入“1”进行人机对战，输入“2”进行本地双人对战，输入“q”退出：\n");
+	printf("Input'1' pve ,input'2' pvp ,input'q' quit\n");
 	//scanf_s("%d", &a);
 	read(0, bufr, 128);
 	if (bufr[0] == '1')
@@ -83,7 +87,7 @@ int game_start()
 	}
 	else
 	{
-		printf("请输入“1”、“2”或“q”。\n");
+		printf("Input '1'or'2'or'q'\n");
 		goto flag1;
 	}
 	memset(bufr, 0, 100);
@@ -92,18 +96,18 @@ int game_start()
 int two_players()
 {
 	char bufr[128];
+        int x = 0, y = 0;
 	while (1) {
-		int x, y;
 		main_function();
 		if (win() == 2)
 		{
-			printf("玩家2胜");
+			printf("player2win");
 			memset(bufr, 0, 100);
 			return 0;
 		}
 		print();
 	flag3:
-		printf("请玩家1输入纵坐标：");
+		printf("P1col:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -111,7 +115,7 @@ int two_players()
 			return 0;
 		}
 		x = getNum(bufr);
-		printf("请玩家1输入横坐标：");
+		printf("P1row:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -123,19 +127,19 @@ int two_players()
 			Table[x][y] = me;
 		}
 		else {
-			printf("输入坐标已有棋子或不在棋盘范围内，请重新输入：\n");
+			printf("Error,input again.\n");
 			goto flag3;
 		}
 		main_function();
 		print();
 		if (win() == 1)
 		{
-			printf("玩家1胜");
+			printf("player1win");
 			memset(bufr, 0, 100);
 			return 0;
 		}
 	flag4:
-		printf("请玩家2输入纵坐标：");
+		printf("P2col:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -143,7 +147,7 @@ int two_players()
 			return 0;
 		}
 		x = getNum(bufr);
-		printf("请玩家2输入横坐标：");
+		printf("P2row:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -155,14 +159,14 @@ int two_players()
 			Table[x][y] = enemy;
 		}
 		else {
-			printf("输入坐标已有棋子或不在棋盘范围内，请重新输入：\n");
+			printf("Error,input again.\n");
 			goto flag4;
 		}
 		main_function();
 		print();
 		if (win() == 2)
 		{
-			printf("玩家2胜");
+			printf("player2win");
 			memset(bufr, 0, 100);
 			return 0;
 		}
@@ -175,13 +179,13 @@ int two_players()
 int AI_player()
 {
 	char bufr[128];
+        int x = 0, y = 0;
 	while (1)
 	{
 		main_function();
-		int x, y;
 		if (win() == 2)
 		{
-			printf("玩家胜");
+			printf("Player Win!");
 			memset(bufr, 0, 100);
 			return 0;
 		}
@@ -190,12 +194,12 @@ int AI_player()
 		main_function();
 		if (win() == 1)
 		{
-			printf("电脑胜");
+			printf("Computer Win!");
 			memset(bufr, 0, 100);
 			return 0;
 		}
 	flag2:
-		printf("请玩家输入纵坐标：");
+		printf("Player col:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -203,7 +207,9 @@ int AI_player()
 			return 0;
 		}
 		x = getNum(bufr);
-		printf("请玩家输入横坐标：");
+                //printf("Pbcol=%c",bufr[0]);
+                //printf("Pxcol=%d",x);
+		printf("Player row:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
@@ -211,11 +217,14 @@ int AI_player()
 			return 0;
 		}
 		y = getNum(bufr);
+                //printf("Pbrow=%c",bufr[0]);
+                //printf("Pyrow=%d",y);
+                
 		if (x >= 0 && x <= 14 && y >= 0 && y <= 14 && Table[x][y] == 0) {
 			Table[x][y] = enemy;
 		}
 		else {
-			printf("输入坐标已有棋子或不在棋盘范围内，请重新输入：\n");
+			printf("Error,input again.\n");
 			goto flag2;
 		}
 	}
@@ -912,15 +921,16 @@ void select_point()
 
 int getNum(char * bufr)
 {
-	int ten = 1, i = 0, res = 0;
-	for (i = 0; i < strlen(bufr) - 1; i++)
-	{
-		ten *= 10;
-	}
-	for (i = 0; i < strlen(bufr); i++)
-	{
-		res += (bufr[i] - '0') * ten;
-		ten /= 10;
-	}
+	int res;
+        //printf("bu1=%d,bu2=%d",bufr[0],bufr[1]);
+        if(bufr[1] >= 48 && bufr[1] <= 57 )
+        {
+                res = bufr[1] - 48;
+                res = res + 10;
+        }
+        else
+        {
+                res = bufr[0] - 48;
+        }
 	return res;
 }
