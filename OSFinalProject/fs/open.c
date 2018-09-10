@@ -25,8 +25,7 @@
 #include "proto.h"
 
 PRIVATE struct inode * create_file(char * path, int flags);
-PRIVATE int alloc_imap_bit(int dev);
-PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
+PRIVATE int alloc_ismap_bit(int dev, int nr_sects_to_alloc);
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
 PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename);
 
@@ -77,7 +76,7 @@ PUBLIC int do_open()
 	struct inode * pin = 0;
 	if (flags & O_CREAT) {
 		if (inode_nr) {
-			printl("{FS} file exists.\n");
+			printl("file exists.\n");
 			return -1;
 		}
 		else {
@@ -102,7 +101,7 @@ PUBLIC int do_open()
 		f_desc_table[i].fd_inode = pin;
 
 		f_desc_table[i].fd_mode = flags;
-		f_desc_table[i].fd_cnt = 1;
+		/* f_desc_table[i].fd_cnt = 1; */
 		f_desc_table[i].fd_pos = 0;
 
 		int imode = pin->i_mode & I_TYPE_MASK;
@@ -145,6 +144,8 @@ PUBLIC int do_open()
  * 
  * @see open()
  * @see do_open()
+ *
+ * @todo return values of routines called, return values of self.
  *****************************************************************************/
 PRIVATE struct inode * create_file(char * path, int flags)
 {
@@ -153,8 +154,8 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	if (strip_path(filename, path, &dir_inode) != 0)
 		return 0;
 
-	int inode_nr = alloc_imap_bit(dir_inode->i_dev);
-	int free_sect_nr = alloc_smap_bit(dir_inode->i_dev,
+	int inode_nr = alloc_ismap_bit(dir_inode->i_dev, 0);//M
+	int free_sect_nr = alloc_ismap_bit(dir_inode->i_dev,
 					  NR_DEFAULT_FILE_SECTS);
 	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
 					 free_sect_nr);
@@ -176,8 +177,7 @@ PUBLIC int do_close()
 {
 	int fd = fs_msg.FD;
 	put_inode(pcaller->filp[fd]->fd_inode);
-	if (--pcaller->filp[fd]->fd_cnt == 0)
-		pcaller->filp[fd]->fd_inode = 0;
+	pcaller->filp[fd]->fd_inode = 0;
 	pcaller->filp[fd] = 0;
 
 	return 0;
@@ -223,53 +223,20 @@ PUBLIC int do_lseek()
 }
 
 /*****************************************************************************
- *                                alloc_imap_bit
+ *                                alloc_ismap_bit
  *****************************************************************************/
 /**
+ * alloc_imap_bit
+ *
  * Allocate a bit in inode-map.
  * 
  * @param dev  In which device the inode-map is located.
  * 
  * @return  I-node nr.
- *****************************************************************************/
-PRIVATE int alloc_imap_bit(int dev)
-{
-	int inode_nr = 0;
-	int i, j, k;
-
-	int imap_blk0_nr = 1 + 1; /* 1 boot sector & 1 super block */
-	struct super_block * sb = get_super_block(dev);
-
-	for (i = 0; i < sb->nr_imap_sects; i++) {
-		RD_SECT(dev, imap_blk0_nr + i);
-
-		for (j = 0; j < SECTOR_SIZE; j++) {
-			/* skip `11111111' bytes */
-			if (fsbuf[j] == 0xFF)
-				continue;
-			/* skip `1' bits */
-			for (k = 0; ((fsbuf[j] >> k) & 1) != 0; k++) {}
-			/* i: sector index; j: byte index; k: bit index */
-			inode_nr = (i * SECTOR_SIZE + j) * 8 + k;
-			fsbuf[j] |= (1 << k);
-			/* write the bit to imap */
-			WR_SECT(dev, imap_blk0_nr + i);
-			break;
-		}
-
-		return inode_nr;
-	}
-
-	/* no free bit in imap */
-	panic("inode-map is probably full.\n");
-
-	return 0;
-}
-
-/*****************************************************************************
- *                                alloc_smap_bit
- *****************************************************************************/
-/**
+ *
+ *
+ * alloc_smap_bit
+ *
  * Allocate a bit in sector-map.
  * 
  * @param dev  In which device the sector-map is located.
@@ -277,52 +244,87 @@ PRIVATE int alloc_imap_bit(int dev)
  * 
  * @return  The 1st sector nr allocated.
  *****************************************************************************/
-PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
+PRIVATE int alloc_ismap_bit(int dev, int nr_sects_to_alloc)
 {
-	/* int nr_sects_to_alloc = NR_DEFAULT_FILE_SECTS; */
+	/* alloc_imap_bit */
+	if(nr_sects_to_alloc == 0){
+		int inode_nr = 0;
+		int i, j, k;
+		int imap_blk0_nr = 1 + 1; /* 1 boot sector & 1 super block */
+		struct super_block * sb = get_super_block(dev);
+		for (i = 0; i < sb->nr_imap_sects; i++) {
+			RD_SECT(dev, imap_blk0_nr + i);
 
-	int i; /* sector index */
-	int j; /* byte index */
-	int k; /* bit index */
-
-	struct super_block * sb = get_super_block(dev);
-
-	int smap_blk0_nr = 1 + 1 + sb->nr_imap_sects;
-	int free_sect_nr = 0;
-
-	for (i = 0; i < sb->nr_smap_sects; i++) { /* smap_blk0_nr + i :
-						     current sect nr. */
-		RD_SECT(dev, smap_blk0_nr + i);
-
-		/* byte offset in current sect */
-		for (j = 0; j < SECTOR_SIZE && nr_sects_to_alloc > 0; j++) {
-			k = 0;
-			if (!free_sect_nr) {
-				/* loop until a free bit is found */
-				if (fsbuf[j] == 0xFF) continue;
-				for (; ((fsbuf[j] >> k) & 1) != 0; k++) {}
-				free_sect_nr = (i * SECTOR_SIZE + j) * 8 +
-					k - 1 + sb->n_1st_sect;
-			}
-
-			for (; k < 8; k++) { /* repeat till enough bits are set */
-				assert(((fsbuf[j] >> k) & 1) == 0);
+			for (j = 0; j < SECTOR_SIZE; j++) {
+				/* skip `11111111' bytes */
+				if (fsbuf[j] == 0xFF)
+					continue;
+				/* skip `1' bits */
+				for (k = 0; ((fsbuf[j] >> k) & 1) != 0; k++) {}
+				/* i: sector index; j: byte index; k: bit index */
+				inode_nr = (i * SECTOR_SIZE + j) * 8 + k;
 				fsbuf[j] |= (1 << k);
-				if (--nr_sects_to_alloc == 0)
-					break;
+				/* write the bit to imap */
+				WR_SECT(dev, imap_blk0_nr + i);
+				break;
 			}
+
+			return inode_nr;
 		}
 
-		if (free_sect_nr) /* free bit found, write the bits to smap */
-			WR_SECT(dev, smap_blk0_nr + i);
+		/* no free bit in imap */
+		panic("inode-map is probably full.\n");
 
-		if (nr_sects_to_alloc == 0)
-			break;
+		return 0;
 	}
 
-	assert(nr_sects_to_alloc == 0);
+	/* alloc_smap_bit */
+	else{
+		/* int nr_sects_to_alloc = NR_DEFAULT_FILE_SECTS; */
 
-	return free_sect_nr;
+		int i; /* sector index */
+		int j; /* byte index */
+		int k; /* bit index */
+
+		struct super_block * sb = get_super_block(dev);
+
+		int smap_blk0_nr = 1 + 1 + sb->nr_imap_sects;
+		int free_sect_nr = 0;
+
+		for (i = 0; i < sb->nr_smap_sects; i++) { /* smap_blk0_nr + i :
+							     current sect nr. */
+			RD_SECT(dev, smap_blk0_nr + i);
+
+			/* byte offset in current sect */
+			for (j = 0; j < SECTOR_SIZE && nr_sects_to_alloc > 0; j++) {
+				k = 0;
+				if (!free_sect_nr) {
+					/* loop until a free bit is found */
+					if (fsbuf[j] == 0xFF) continue;
+					for (; ((fsbuf[j] >> k) & 1) != 0; k++) {}
+					free_sect_nr = (i * SECTOR_SIZE + j) * 8 +
+						k - 1 + sb->n_1st_sect;
+				}
+
+				for (; k < 8; k++) { /* repeat till enough bits are set */
+					assert(((fsbuf[j] >> k) & 1) == 0);
+					fsbuf[j] |= (1 << k);
+					if (--nr_sects_to_alloc == 0)
+						break;
+				}
+			}
+
+			if (free_sect_nr) /* free bit found, write the bits to smap */
+				WR_SECT(dev, smap_blk0_nr + i);
+
+			if (nr_sects_to_alloc == 0)
+				break;
+		}
+
+		assert(nr_sects_to_alloc == 0);
+
+		return free_sect_nr;
+	}
 }
 
 /*****************************************************************************
