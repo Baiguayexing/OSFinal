@@ -764,10 +764,6 @@ int initFS()
 			{
 				myhelp();
 			}
-			else if (strcmp(cmd, "q") == 0)
-			{
-				return 0;
-			}
 			else
 			{
 				printf("Command not found\n");
@@ -1160,7 +1156,6 @@ void myhelp()
 	printf("*     rmfile  [filename]               Remove a file                          *\n");
 	printf("*     rmdir   [dirname]                Remove a directory                     *\n");
 	printf("*     rwfile  [filename]               Rewrite the content                    *\n");
-	printf("*     q                                Return                                 *\n");
 	printf("-------------------------------------------------------------------------------\n");
 
 }
