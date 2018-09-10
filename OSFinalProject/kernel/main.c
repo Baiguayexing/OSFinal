@@ -483,6 +483,9 @@ void help()
 	printf("=       welcome                        Print welcome page                     =\n");
 	printf("=       clear                          Clean the screen                       =\n");
 	printf("=       help                           List all commands                      =\n");
+	printf("=       mini                           Mini programs                          =\n");
+	printf("=       guess                          Guess number game                      =\n");
+	printf("=       queen                          Nqueen game                            =\n");
 	printf("===============================================================================\n");
 
 }
