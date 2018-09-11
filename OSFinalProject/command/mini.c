@@ -22,7 +22,7 @@ int _getNum(char * bufr);
 
 int main()
 {
-        char bufr[128];
+        char bufr[128]={0};
 
 	printf("    Mini Program    \n");
 	flag1:
@@ -99,7 +99,7 @@ int win()
 
 int game_start()
 {
-	char bufr[128];
+	char bufr[128]={0};
 
 	printf("    Welcome    \n");
 	flag1:
@@ -111,7 +111,7 @@ int game_start()
 	else if (bufr[0] == '2')
 		two_players();
 	else if (bufr[0] == 'q') {
-		//memset(bufr, 0, 100);
+		memset(bufr, 0, 100);
 		return 0;
 	}
 	else
@@ -119,36 +119,36 @@ int game_start()
 		printf("Input '1'or'2'or'q'\n");
 		goto flag1;
 	}
-	//memset(bufr, 0, 100);
+	memset(bufr, 0, 100);
 }
 
 int two_players()
 {
-	char bufr[128];
+	char bufr[128]={0};
         int x = 0, y = 0;
 	while (1) {
 		main_function();
 		if (win() == 2)
 		{
 			printf("player2win");
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		print();
 	flag3:
-		printf("P1col:");
+		printf("P1row:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		x = getNum(bufr);
-		printf("P1row:");
+		printf("P1col:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		y = getNum(bufr);
@@ -164,23 +164,23 @@ int two_players()
 		if (win() == 1)
 		{
 			printf("player1win");
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 	flag4:
-		printf("P2col:");
+		printf("P2row:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		x = getNum(bufr);
-		printf("P2row:");
+		printf("P2col:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		y = getNum(bufr);
@@ -196,18 +196,18 @@ int two_players()
 		if (win() == 2)
 		{
 			printf("player2win");
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 
 	}
-	//memset(bufr, 0, 100);
+	memset(bufr, 0, 100);
 	return 0;
 }
 
 int AI_player()
 {
-	char bufr[128];
+	char bufr[128]={0};
         int x = 0, y = 0;
 	while (1)
 	{
@@ -215,7 +215,7 @@ int AI_player()
 		if (win() == 2)
 		{
 			printf("Player Win!");
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		select_point();
@@ -224,25 +224,25 @@ int AI_player()
 		if (win() == 1)
 		{
 			printf("Computer Win!");
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 	flag2:
-		printf("Player col:");
+		printf("Player row:");
 		//scanf_s("%d", &x);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		x = getNum(bufr);
                 //printf("Pbcol=%c",bufr[0]);
                 //printf("Pxcol=%d",x);
-		printf("Player row:");
+		printf("Player col:");
 		//scanf_s("%d", &y);
 		read(0, bufr, 128);
 		if (bufr[0] == 'q') {
-			//memset(bufr, 0, 100);
+			memset(bufr, 0, 100);
 			return 0;
 		}
 		y = getNum(bufr);
@@ -962,7 +962,7 @@ int getNum(char * bufr)
 int cal_main()
 {
 	int i, num1 = 0, num2 = 0, flag = 1, res = 0;
-        char bufr[128];
+        char bufr[128]={0};
 
 	printf("===================================================\n");
 	printf("=                  Calculator                     =\n");
